@@ -22,8 +22,9 @@ def ParseTeachers():
         html = BS(webPage.content, 'html.parser')
         items = html.select(".list-group > li > a")
         for item in items:
-            # print(f"{item.text[:-1]}: {item['href']}")
-            teachersInfo[item.text[1:-1]] = item['href']
+            staffId = ''.join(c for c in item['href'] if c.isdigit())
+            # print(f"{item.text[:-1]}: {staffId}")
+            teachersInfo[item.text[1:-1]] = f"https://ssau.ru/rasp?staffId={staffId}"
 
         if(len(items) == 0):
             break
@@ -36,5 +37,5 @@ def ParseTeachers():
 
 
 
-ParseGroups()
+# ParseGroups()
 ParseTeachers()
