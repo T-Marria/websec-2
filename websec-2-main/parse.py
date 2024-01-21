@@ -20,7 +20,7 @@ def ParseGroups():
             groupsInfo[group.text[1:-1]] = group['href']
     
     with open("GroupsInfo.json", "w") as file:
-        json.dump(groupsInfo, file, separators=(',\n', ': '))
+        json.dump(groupsInfo, file, indent=4)
 
 
 def ParseTeachers():
@@ -40,36 +40,55 @@ def ParseTeachers():
         print(f"{page} страниц из 118 обработано", end="\r")
 
     with open("TeachersInfo.json", "w") as file:
-        json.dump(teachersInfo, file, separators=(',\n', ': '), ensure_ascii=False)
+        json.dump(teachersInfo, file, indent=4, ensure_ascii=False)
+
+# TODO: Доделать определение типа занятия
+def ParseLesson(scheduleLesson: BS):
+    lesson = {}
+    lesson["discipline"] = scheduleLesson.find("div", "schedule__discipline").text
+    lesson["place"] = scheduleLesson.find("div", "schedule__place").text
+    lesson["teacher"] = scheduleLesson.find("div", "schedule__teacher").text
+    lesson["groups"] = scheduleLesson.find("div", "schedule__groups").text
+    return lesson
 
 
+# Возможно убрать дефолтные значения отсюда
 def GetGroupSchedule(groupNumber: str = "6411-100503D", week: int = GetCurrentWeek()):
     schedule = {
-        "Mon": [],
-        "Tue": [],
-        "Wed": [],
-        "Thu": [],
-        "Fri": [],
-        "Sat": [],
-        "Sun": []
+        1: [], # Mon
+        2: [], # Tue
+        3: [], # Wed
+        4: [], # Thu
+        5: [], # Fri
+        0: [], # Sat
     }
+    timeStamps = []
 
     with open("GroupsInfo.json", "r") as file:
         groupsInfo = json.load(file)
 
     webPage = requests.get(f"https://ssau.ru{groupsInfo[groupNumber]}&selectedWeek={week}")
     html = BS(webPage.content, 'html.parser')
-    sch_items = html.select(".schedule__items > .schedule__item")
-    for item in sch_items:
-        print(item)
-        print()
 
-GetGroupSchedule("6411-100503D")
+    timeItems = html.select(".schedule__items > .schedule__time")
+    for time in timeItems:
+        timeStamps.append(time.text)
 
 
+    scheduleItems = html.select(".schedule__items > .schedule__item")
+    for i in range(7, len(scheduleItems)):
+        if len(scheduleItems[i].contents) != 0:
+            lessons = scheduleItems[i].select(".schedule__lesson")
+            for lesson in lessons:
+                lessonInfo = ParseLesson(lesson)
+                lessonInfo["time"] = timeStamps[i // 6 - 1]
+                schedule[i % 6].append(lessonInfo)
+    
+    with open("schedule.json", "w") as file:
+        json.dump(schedule, file, indent=4, ensure_ascii=False)
 
 
 
-
+GetGroupSchedule("6411-100503D", 3)
 # ParseGroups()
 # ParseTeachers()
