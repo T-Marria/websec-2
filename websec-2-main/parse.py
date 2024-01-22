@@ -96,7 +96,6 @@ def GetScheduleByURL(url: str = "https://ssau.ru/rasp?groupId=531030143", week: 
     for time in timeItems:
         timeStamps.append(time.text)
 
-
     scheduleItems = html.select(".schedule__items > .schedule__item")
     for i in range(7, len(scheduleItems)):
         if len(scheduleItems[i].contents) != 0:
