@@ -3,14 +3,14 @@ from bs4 import BeautifulSoup as BS
 import json
 
 
-def GetCurrentWeek():
+def GetCurrentWeek() -> int:
     webPage = requests.get("https://ssau.ru/rasp?groupId=531030143")
     html = BS(webPage.content, 'html.parser')
     info = html.select(".week-nav-current > .week-nav-current_week")
     return int(''.join(c for c in info[0].text if c.isdigit()))
 
 
-def ParseGroups():
+def ParseGroups() -> None:
     groupsInfo = {}
     for course in range(1, 6):
         webPage = requests.get(f"https://ssau.ru/rasp/faculty/492430598?course={course}")
@@ -23,7 +23,7 @@ def ParseGroups():
         json.dump(groupsInfo, file, indent=4)
 
 
-def ParseTeachers():
+def ParseTeachers() -> None:
     teachersInfo = {}
     page = 1
     while True:
@@ -42,8 +42,8 @@ def ParseTeachers():
     with open("TeachersInfo.json", "w") as file:
         json.dump(teachersInfo, file, indent=4, ensure_ascii=False)
 
-# TODO: Доделать определение типа занятия
-def ParseLesson(scheduleLesson: BS):
+
+def ParseLesson(scheduleLesson: BS) -> dict:
     # Тип занятия описывается css-классом "lesson-border-type-N", где N означает тип занятия:
     lessonsTypes = {
         1: 'Лекция',
@@ -63,8 +63,21 @@ def ParseLesson(scheduleLesson: BS):
     return lessonInfo
 
 
+def GroupURL(groupNumber: str) -> str:
+    with open("GroupsInfo.json", "r") as file:
+        groupsInfo = json.load(file)
+    url = f"https://ssau.ru{groupsInfo[groupNumber]}"
+    return url
+
+def TeachersURL(name: str) -> str:
+    with open("TeachersInfo.json", "r") as file:
+        teachersInfo = json.load(file)
+    url = teachersInfo[name]
+    return url
+
+
 # Возможно убрать дефолтные значения отсюда
-def GetGroupSchedule(groupNumber: str = "6411-100503D", week: int = GetCurrentWeek()):
+def GetScheduleByURL(url: str = "https://ssau.ru/rasp?groupId=531030143", week: int = GetCurrentWeek()) -> None:
     schedule = {
         1: [], # Mon
         2: [], # Tue
@@ -75,10 +88,8 @@ def GetGroupSchedule(groupNumber: str = "6411-100503D", week: int = GetCurrentWe
     }
     timeStamps = []
 
-    with open("GroupsInfo.json", "r") as file:
-        groupsInfo = json.load(file)
-
-    webPage = requests.get(f"https://ssau.ru{groupsInfo[groupNumber]}&selectedWeek={week}")
+    webPage = requests.get(url + f"&selectedWeek={week}")
+    print(url + "&selectedWeek={week}")
     html = BS(webPage.content, 'html.parser')
 
     timeItems = html.select(".schedule__items > .schedule__time")
@@ -99,7 +110,8 @@ def GetGroupSchedule(groupNumber: str = "6411-100503D", week: int = GetCurrentWe
         json.dump(schedule, file, indent=4, ensure_ascii=False)
 
 
+GetScheduleByURL(GroupURL("6411-100503D"), 3)
 
-GetGroupSchedule("6411-100503D", 3)
+# GetGroupSchedule("6411-100503D", 3)
 # ParseGroups()
 # ParseTeachers()
