@@ -44,12 +44,23 @@ def ParseTeachers():
 
 # TODO: Доделать определение типа занятия
 def ParseLesson(scheduleLesson: BS):
-    lesson = {}
-    lesson["discipline"] = scheduleLesson.find("div", "schedule__discipline").text
-    lesson["place"] = scheduleLesson.find("div", "schedule__place").text
-    lesson["teacher"] = scheduleLesson.find("div", "schedule__teacher").text
-    lesson["groups"] = scheduleLesson.find("div", "schedule__groups").text
-    return lesson
+    # Тип занятия описывается css-классом "lesson-border-type-N", где N означает тип занятия:
+    lessonsTypes = {
+        1: 'Лекция',
+        2: 'Лабораторная',
+        3: 'Практика',
+        4: 'Другое',
+        5: 'Экзамен',
+        6: 'Консультация',
+        8: 'Зачет',
+    }
+    lessonInfo = {}
+    lessonInfo["discipline"] = scheduleLesson.find("div", "schedule__discipline").text
+    lessonInfo["type"] = lessonsTypes[int(scheduleLesson['class'][2][-1])]
+    lessonInfo["place"] = scheduleLesson.find("div", "schedule__place").text
+    lessonInfo["teacher"] = scheduleLesson.find("div", "schedule__teacher").text
+    lessonInfo["groups"] = scheduleLesson.find("div", "schedule__groups").text
+    return lessonInfo
 
 
 # Возможно убрать дефолтные значения отсюда
