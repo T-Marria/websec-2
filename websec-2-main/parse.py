@@ -69,6 +69,7 @@ def GroupURL(groupNumber: str) -> str:
     url = f"https://ssau.ru{groupsInfo[groupNumber]}"
     return url
 
+
 def TeachersURL(name: str) -> str:
     with open("TeachersInfo.json", "r") as file:
         teachersInfo = json.load(file)
@@ -89,7 +90,6 @@ def GetScheduleByURL(url: str = "https://ssau.ru/rasp?groupId=531030143", week: 
     timeStamps = []
 
     webPage = requests.get(url + f"&selectedWeek={week}")
-    print(url + "&selectedWeek={week}")
     html = BS(webPage.content, 'html.parser')
 
     timeItems = html.select(".schedule__items > .schedule__time")
@@ -106,12 +106,5 @@ def GetScheduleByURL(url: str = "https://ssau.ru/rasp?groupId=531030143", week: 
                 lessonInfo["time"] = timeStamps[i // 6 - 1]
                 schedule[i % 6].append(lessonInfo)
     
-    with open("schedule.json", "w") as file:
+    with open("Schedule.json", "w") as file:
         json.dump(schedule, file, indent=4, ensure_ascii=False)
-
-
-GetScheduleByURL(GroupURL("6411-100503D"), 3)
-
-# GetGroupSchedule("6411-100503D", 3)
-# ParseGroups()
-# ParseTeachers()
